@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,7 +43,7 @@ export default function FuelFormModal({ open, mode, log, onClose, onSubmit, isSu
   });
 
   const selectedVehicle = watch("vehicle_id");
-  const vehicleTrips = trips.filter((trip) => String(trip.vehicle_id) === String(selectedVehicle));
+  const vehicleTrips = useMemo(() => trips.filter((trip) => String(trip.vehicle_id) === String(selectedVehicle)), [trips, selectedVehicle]);
 
   useEffect(() => {
     if (!open) return;
