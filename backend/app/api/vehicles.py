@@ -71,6 +71,16 @@ def get_vehicle(
         status.HTTP_201_CREATED: {
             "description": "Vehicle created successfully.",
         },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Vehicle business validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Vehicle cannot be created with On Trip status",
+                    },
+                }
+            },
+        },
         status.HTTP_409_CONFLICT: {
             "description": "Vehicle registration number already exists.",
             "content": {
@@ -123,6 +133,16 @@ def create_vehicle(
     responses={
         status.HTTP_200_OK: {
             "description": "Vehicle updated successfully.",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Vehicle business validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid vehicle status transition from Retired to Available",
+                    },
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Vehicle not found.",

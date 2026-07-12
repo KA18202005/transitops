@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, Response, status
 
 from app.core.database import get_db
+from app.schemas.maintenance import MaintenanceResponse
 from app.services.maintenance_service import MaintenanceService
 
 router = APIRouter(
@@ -13,7 +14,7 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=list[Any],
+    response_model=list[MaintenanceResponse],
     status_code=status.HTTP_200_OK,
     summary="List maintenance logs",
     description="Return a paginated list of maintenance logs.",
@@ -34,7 +35,7 @@ def list_maintenance(
 
 @router.get(
     "/{maintenance_id}",
-    response_model=Any,
+    response_model=MaintenanceResponse,
     status_code=status.HTTP_200_OK,
     summary="Get maintenance log",
     description="Return a maintenance log by its unique identifier.",
@@ -65,13 +66,23 @@ def get_maintenance(
 
 @router.post(
     "/",
-    response_model=Any,
+    response_model=MaintenanceResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create maintenance log",
     description="Create a new maintenance log.",
     responses={
         status.HTTP_201_CREATED: {
             "description": "Maintenance log created successfully.",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Maintenance workflow validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "start_date is required before starting maintenance",
+                    },
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Related vehicle or user not found.",
@@ -108,13 +119,23 @@ def create_maintenance(
 
 @router.put(
     "/{maintenance_id}",
-    response_model=Any,
+    response_model=MaintenanceResponse,
     status_code=status.HTTP_200_OK,
     summary="Update maintenance log",
     description="Update an existing maintenance log.",
     responses={
         status.HTTP_200_OK: {
             "description": "Maintenance log updated successfully.",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Maintenance workflow validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid maintenance status transition from Completed to In Progress",
+                    },
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Maintenance log or related record not found.",
@@ -146,6 +167,16 @@ def update_maintenance(
     responses={
         status.HTTP_204_NO_CONTENT: {
             "description": "Maintenance log deleted successfully.",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Maintenance log cannot be deleted in its current state.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "In-progress maintenance must be completed before deletion",
+                    },
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Maintenance log not found.",

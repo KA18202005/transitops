@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, Response, status
 
 from app.core.database import get_db
+from app.schemas.driver import DriverResponse
 from app.services.driver_service import DriverService
 
 router = APIRouter(
@@ -13,7 +14,7 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=list[Any],
+    response_model=list[DriverResponse],
     status_code=status.HTTP_200_OK,
     summary="List drivers",
     description="Return a paginated list of drivers.",
@@ -30,7 +31,7 @@ def list_drivers(
 
 @router.get(
     "/{driver_id}",
-    response_model=Any,
+    response_model=DriverResponse,
     status_code=status.HTTP_200_OK,
     summary="Get driver",
     description="Return a driver by its unique identifier.",
@@ -54,12 +55,20 @@ def get_driver(
 
 @router.post(
     "/",
-    response_model=Any,
+    response_model=DriverResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create driver",
     description="Create a new driver profile.",
     responses={
         status.HTTP_201_CREATED: {"description": "Driver created successfully."},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Driver validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Driver license has expired"},
+                }
+            },
+        },
         status.HTTP_409_CONFLICT: {
             "description": "Driver user or license number already exists.",
             "content": {
@@ -98,12 +107,22 @@ def create_driver(
 
 @router.put(
     "/{driver_id}",
-    response_model=Any,
+    response_model=DriverResponse,
     status_code=status.HTTP_200_OK,
     summary="Update driver",
     description="Update an existing driver profile.",
     responses={
         status.HTTP_200_OK: {"description": "Driver updated successfully."},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Driver validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid driver status transition from Available to On Trip",
+                    },
+                }
+            },
+        },
         status.HTTP_404_NOT_FOUND: {
             "description": "Driver not found.",
             "content": {

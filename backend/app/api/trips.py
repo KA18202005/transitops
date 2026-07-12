@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, Response, status
 
 from app.core.database import get_db
+from app.schemas.trip import TripResponse
 from app.services.trip_service import TripService
 
 router = APIRouter(
@@ -13,7 +14,7 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=list[Any],
+    response_model=list[TripResponse],
     status_code=status.HTTP_200_OK,
     summary="List trips",
     description="Return a paginated list of trips.",
@@ -30,7 +31,7 @@ def list_trips(
 
 @router.get(
     "/{trip_id}",
-    response_model=Any,
+    response_model=TripResponse,
     status_code=status.HTTP_200_OK,
     summary="Get trip",
     description="Return a trip by its unique identifier.",
@@ -54,12 +55,22 @@ def get_trip(
 
 @router.post(
     "/",
-    response_model=Any,
+    response_model=TripResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create trip",
     description="Create a new trip.",
     responses={
         status.HTTP_201_CREATED: {"description": "Trip created successfully."},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Trip business validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Cargo weight exceeds vehicle maximum load capacity (15000.00 > 12500.00)",
+                    },
+                }
+            },
+        },
         status.HTTP_404_NOT_FOUND: {
             "description": "Related vehicle or driver not found.",
         },
@@ -109,12 +120,22 @@ def create_trip(
 
 @router.put(
     "/{trip_id}",
-    response_model=Any,
+    response_model=TripResponse,
     status_code=status.HTTP_200_OK,
     summary="Update trip",
     description="Update an existing trip.",
     responses={
         status.HTTP_200_OK: {"description": "Trip updated successfully."},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Trip business validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid trip status transition from Completed to Dispatched",
+                    },
+                }
+            },
+        },
         status.HTTP_404_NOT_FOUND: {
             "description": "Trip or related record not found.",
         },
@@ -141,6 +162,16 @@ def update_trip(
     description="Delete an existing trip.",
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Trip deleted successfully."},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Trip cannot be deleted in its current lifecycle state.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Dispatched trips must be completed or cancelled before deletion",
+                    },
+                }
+            },
+        },
         status.HTTP_404_NOT_FOUND: {
             "description": "Trip not found.",
             "content": {

@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, Response, status
 
 from app.core.database import get_db
+from app.schemas.expense import ExpenseResponse
 from app.services.expense_service import ExpenseService
 
 router = APIRouter(
@@ -13,7 +14,7 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=list[Any],
+    response_model=list[ExpenseResponse],
     status_code=status.HTTP_200_OK,
     summary="List expenses",
     description="Return a paginated list of expenses.",
@@ -32,7 +33,7 @@ def list_expenses(
 
 @router.get(
     "/{expense_id}",
-    response_model=Any,
+    response_model=ExpenseResponse,
     status_code=status.HTTP_200_OK,
     summary="Get expense",
     description="Return an expense by its unique identifier.",
@@ -56,14 +57,21 @@ def get_expense(
 
 @router.post(
     "/",
-    response_model=Any,
+    response_model=ExpenseResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create expense",
     description="Create a new expense.",
     responses={
         status.HTTP_201_CREATED: {"description": "Expense created successfully."},
         status.HTTP_400_BAD_REQUEST: {
-            "description": "Expense vehicle does not match trip vehicle.",
+            "description": "Expense business validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Expense vehicle must match the trip vehicle",
+                    },
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Related vehicle or trip not found.",
@@ -98,14 +106,21 @@ def create_expense(
 
 @router.put(
     "/{expense_id}",
-    response_model=Any,
+    response_model=ExpenseResponse,
     status_code=status.HTTP_200_OK,
     summary="Update expense",
     description="Update an existing expense.",
     responses={
         status.HTTP_200_OK: {"description": "Expense updated successfully."},
         status.HTTP_400_BAD_REQUEST: {
-            "description": "Expense vehicle does not match trip vehicle.",
+            "description": "Expense business validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Expense amount must be greater than zero",
+                    },
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Expense or related record not found.",

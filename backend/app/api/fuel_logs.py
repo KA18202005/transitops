@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, Response, status
 
 from app.core.database import get_db
+from app.schemas.fuel_log import FuelLogResponse
 from app.services.fuel_service import FuelService
 
 router = APIRouter(
@@ -13,7 +14,7 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=list[Any],
+    response_model=list[FuelLogResponse],
     status_code=status.HTTP_200_OK,
     summary="List fuel logs",
     description="Return a paginated list of fuel logs.",
@@ -32,7 +33,7 @@ def list_fuel_logs(
 
 @router.get(
     "/{fuel_log_id}",
-    response_model=Any,
+    response_model=FuelLogResponse,
     status_code=status.HTTP_200_OK,
     summary="Get fuel log",
     description="Return a fuel log by its unique identifier.",
@@ -56,14 +57,21 @@ def get_fuel_log(
 
 @router.post(
     "/",
-    response_model=Any,
+    response_model=FuelLogResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create fuel log",
     description="Create a new fuel log.",
     responses={
         status.HTTP_201_CREATED: {"description": "Fuel log created successfully."},
         status.HTTP_400_BAD_REQUEST: {
-            "description": "Fuel log vehicle does not match trip vehicle.",
+            "description": "Fuel log business validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Fuel log vehicle must match the trip vehicle",
+                    },
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Related vehicle or trip not found.",
@@ -98,14 +106,21 @@ def create_fuel_log(
 
 @router.put(
     "/{fuel_log_id}",
-    response_model=Any,
+    response_model=FuelLogResponse,
     status_code=status.HTTP_200_OK,
     summary="Update fuel log",
     description="Update an existing fuel log.",
     responses={
         status.HTTP_200_OK: {"description": "Fuel log updated successfully."},
         status.HTTP_400_BAD_REQUEST: {
-            "description": "Fuel log vehicle does not match trip vehicle.",
+            "description": "Fuel log business validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Fuel cost must be greater than zero",
+                    },
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Fuel log or related record not found.",
