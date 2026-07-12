@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import { z } from "zod";
+import { useAuth } from "@/context/AuthContext";
+import { getApiErrorMessage } from "@/services/api";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 
@@ -14,9 +16,11 @@ const schema = z.object({
 });
 
 export default function LoginForm() {
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [statusType, setStatusType] = useState("info"); // "info" | "success" | "error"
 
   const {
     register,
@@ -30,12 +34,19 @@ export default function LoginForm() {
   const onSubmit = async (values) => {
     setIsSubmitting(true);
     setStatusMessage("");
+    setStatusType("info");
 
-    await new Promise((resolve) => setTimeout(resolve, 900));
-
-    setStatusMessage("Login form validated. Authentication API integration is pending.");
-    setIsSubmitting(false);
-    console.info("Login form submitted", values);
+    try {
+      await login(values);
+      setStatusType("success");
+      setStatusMessage("Login successful! Redirecting...");
+    } catch (error) {
+      const errorMsg = getApiErrorMessage(error, "Invalid email or password.");
+      setStatusType("error");
+      setStatusMessage(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -80,9 +91,19 @@ export default function LoginForm() {
       </div>
 
       {statusMessage ? (
-        <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600" aria-live="polite">
-          {statusMessage}
-        </p>
+        <div
+          className={`rounded-xl border px-3.5 py-3 text-sm flex items-start gap-2.5 ${
+            statusType === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+              : statusType === "error"
+              ? "border-red-200 bg-red-50 text-red-800"
+              : "border-slate-200 bg-slate-50 text-slate-700"
+          }`}
+          aria-live="polite"
+        >
+          <ShieldCheck size={16} className="mt-0.5 shrink-0" />
+          <span>{statusMessage}</span>
+        </div>
       ) : null}
     </form>
   );

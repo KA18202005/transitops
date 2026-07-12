@@ -12,6 +12,8 @@ import DeleteDriverModal from "@/components/drivers/DeleteDriverModal";
 import Pagination from "@/components/ui/Pagination";
 import LoadingState from "@/components/ui/LoadingState";
 import { initialDrivers } from "@/constants/driverData";
+import { createDriver, deleteDriver, listDrivers, updateDriver } from "@/services/driver";
+import { getApiErrorMessage } from "@/services/api";
 
 const PAGE_SIZE = 6;
 
@@ -33,12 +35,30 @@ export default function DriversPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDrivers(initialDrivers);
-      setIsLoading(false);
-    }, 400);
+    let mounted = true;
 
-    return () => window.clearTimeout(timer);
+    async function loadDrivers() {
+      try {
+        const data = await listDrivers();
+        if (mounted) {
+          setDrivers(data);
+        }
+      } catch (error) {
+        if (mounted) {
+          setDrivers(initialDrivers);
+          toast.error(`Using demo driver data: ${getApiErrorMessage(error, "API unavailable")}`);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadDrivers();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const filteredDrivers = useMemo(() => {
@@ -138,29 +158,39 @@ export default function DriversPage() {
   const handleSubmit = async (values) => {
     setIsSubmitting(true);
 
-    await new Promise((resolve) => window.setTimeout(resolve, 350));
+    try {
+      if (editingDriver) {
+        const savedDriver = await updateDriver(editingDriver.id, { ...editingDriver, ...values });
+        setDrivers((current) => current.map((driver) => (driver.id === editingDriver.id ? savedDriver : driver)));
+        toast.success("Driver updated successfully");
+      } else {
+        const savedDriver = await createDriver(values);
+        setDrivers((current) => [savedDriver, ...current]);
+        toast.success("Driver added successfully");
+      }
 
-    if (editingDriver) {
-      setDrivers((current) => current.map((driver) => (driver.id === editingDriver.id ? { ...driver, ...values } : driver)));
-      toast.success("Driver updated successfully");
-    } else {
-      setDrivers((current) => [{ id: Date.now(), ...values }, ...current]);
-      toast.success("Driver added successfully");
+      closeFormModal();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to save driver"));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    closeFormModal();
   };
 
   const handleDelete = async () => {
     if (!driverToDelete) return;
 
     setIsDeleting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-    setDrivers((current) => current.filter((driver) => driver.id !== driverToDelete.id));
-    setIsDeleting(false);
-    closeDeleteModal();
-    toast.success("Driver deleted successfully");
+    try {
+      await deleteDriver(driverToDelete.id);
+      setDrivers((current) => current.filter((driver) => driver.id !== driverToDelete.id));
+      closeDeleteModal();
+      toast.success("Driver deleted successfully");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to delete driver"));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   function getValidityLabel(driver) {

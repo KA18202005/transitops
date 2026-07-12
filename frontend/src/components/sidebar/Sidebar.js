@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import {
   BarChart3,
   CarFront,
@@ -30,6 +31,7 @@ const navItems = [
 
 export default function Sidebar({ isOpen, onClose }) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   return (
     <aside
@@ -79,13 +81,18 @@ export default function Sidebar({ isOpen, onClose }) {
               <UserRound size={18} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">Fleet Manager</p>
-              <p className="text-xs text-slate-400">Operations overview</p>
+              <p className="text-sm font-semibold text-white truncate max-w-[170px]" title={user?.full_name || "Guest"}>
+                {user?.full_name || "Guest User"}
+              </p>
+              <p className="text-xs text-slate-400">
+                {user?.role || "Fleet Operations"}
+              </p>
             </div>
           </div>
           <button
             type="button"
-            className="mt-3 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500"
+            onClick={logout}
+            className="mt-3 flex w-full items-center gap-2 text-sm text-slate-400 transition-colors hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500"
           >
             <LogOut size={16} />
             <span>Sign out</span>

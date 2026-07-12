@@ -1,12 +1,14 @@
 import { Activity, MapPin, ShieldCheck, Truck } from "lucide-react";
 import Link from "next/link";
 import BrandHighlights from "../../components/common/BrandHighlights";
-import LoginForm from "../../components/common/LoginForm";
+import SignupForm from "../../components/common/SignupForm";
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(148,163,184,0.15),_transparent_38%),linear-gradient(135deg,_#f5f7fb_0%,_#eef2f7_100%)] px-3 py-3 sm:px-4 lg:px-6 lg:py-6">
       <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] max-w-7xl overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_24px_80px_-30px_rgba(15,23,42,0.45)] lg:min-h-[780px]">
+        
+        {/* Left Side: Brand & Product Highlights */}
         <section className="relative flex w-full flex-col justify-between overflow-hidden bg-[#071425] px-6 py-8 text-white sm:px-8 lg:w-[45%] lg:px-10 lg:py-10">
           <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),transparent_45%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_34%),linear-gradient(90deg,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.06)_1px,transparent_1px)] [background-size:100%_100%,100%_100%,24px_24px,24px_24px]" />
           <div className="absolute left-[-6%] top-20 h-40 w-40 rounded-full bg-sky-500/20 blur-3xl" />
@@ -29,22 +31,21 @@ export default function LoginPage() {
                 <span>Command center</span>
               </div>
               <h1 className="max-w-xl text-3xl font-semibold leading-tight sm:text-4xl">
-                Run every vehicle, driver, and trip from one command center.
+                Join our integrated transport network.
               </h1>
               <p className="max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
-                Coordinate dispatch, maintenance, fuel, expenses, and fleet visibility from
-                a secure workspace tailored for modern transport operations.
+                Create your account to start managing dispatch, visibility, fuel logging, expenses, and fleet maintenance under one dashboard.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800/90 bg-slate-900/70 p-4 shadow-inner shadow-black/10">
+            <div className="rounded-2xl border border-slate-880/90 bg-slate-900/70 p-4 shadow-inner shadow-black/10">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-sky-300">
                   <Truck size={18} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-100">Operational route network</p>
-                  <p className="text-sm text-slate-400">Live coordination across fleet movement</p>
+                  <p className="text-sm font-semibold text-slate-100">Live operational network</p>
+                  <p className="text-sm text-slate-400">Secure registration for fleet staff</p>
                 </div>
               </div>
               <div className="relative h-24 overflow-hidden rounded-xl border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(125,211,252,0.15),_transparent_40%)]">
@@ -57,7 +58,7 @@ export default function LoginPage() {
                 <div className="absolute left-58 top-8 h-2.5 w-2.5 rounded-full bg-sky-300" />
                 <div className="absolute bottom-4 left-6 flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">
                   <MapPin size={12} />
-                  <span>Route visibility</span>
+                  <span>Interactive routing</span>
                 </div>
               </div>
             </div>
@@ -73,28 +74,30 @@ export default function LoginPage() {
           </div>
         </section>
 
+        {/* Right Side: Signup Form */}
         <section className="flex w-full items-center justify-center bg-slate-50/80 px-4 py-8 sm:px-6 lg:w-[55%] lg:px-8 xl:px-10">
-          <div className="w-full max-w-[440px] rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.35)] sm:p-8">
-            <div className="mb-7 space-y-2">
+          <div className="w-full max-w-[480px] rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.35)] sm:p-8">
+            <div className="mb-6 space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">
                 Secure operations portal
               </p>
-              <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Welcome back</h2>
+              <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Create an account</h2>
               <p className="text-sm leading-6 text-slate-600">
-                Sign in to continue to TransitOps.
+                Register as an operational user on the TransitOps network.
               </p>
             </div>
 
-            <LoginForm />
+            <SignupForm />
 
             <p className="mt-6 text-center text-sm text-slate-500">
-              Don't have an account?{" "}
-              <Link href="/signup" className="font-semibold text-slate-700 transition-colors hover:text-slate-900 hover:underline">
-                Sign up
+              Already have an account?{" "}
+              <Link href="/login" className="font-semibold text-slate-700 transition-colors hover:text-slate-900 hover:underline">
+                Sign in
               </Link>
             </p>
           </div>
         </section>
+
       </div>
     </div>
   );

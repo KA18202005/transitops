@@ -9,9 +9,9 @@ export default function AppShell({ children }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const isLoginRoute = pathname === "/login";
+  const isAuthRoute = pathname === "/login" || pathname === "/signup";
 
-  if (isLoginRoute) {
+  if (isAuthRoute) {
     return <>{children}</>;
   }
 

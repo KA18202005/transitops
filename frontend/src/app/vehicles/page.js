@@ -1,20 +1,53 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PlusCircle, ShieldCheck, Truck, Wrench } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
+import LoadingState from "@/components/ui/LoadingState";
 import VehicleForm from "@/components/vehicles/VehicleForm";
 import VehicleList from "@/components/vehicles/VehicleList";
 import { initialVehicles } from "@/constants/vehicleData";
+import { createVehicle, deleteVehicle, listVehicles, updateVehicle } from "@/services/vehicle";
+import { getApiErrorMessage } from "@/services/api";
 
 const PAGE_SIZE = 6;
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState(initialVehicles);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadVehicles() {
+      try {
+        const data = await listVehicles();
+        if (mounted) {
+          setVehicles(data);
+        }
+      } catch (error) {
+        if (mounted) {
+          setVehicles(initialVehicles);
+          toast.error(`Using demo vehicle data: ${getApiErrorMessage(error, "API unavailable")}`);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadVehicles();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredVehicles = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -83,23 +116,45 @@ export default function VehiclesPage() {
     setIsModalOpen(false);
   };
 
-  const handleSubmit = (values) => {
-    if (editingVehicle) {
-      setVehicles((current) => current.map((vehicle) => (vehicle.id === editingVehicle.id ? { ...vehicle, ...values } : vehicle)));
-    } else {
-      setVehicles((current) => [{ id: Date.now(), ...values }, ...current]);
+  const handleSubmit = async (values) => {
+    setIsSubmitting(true);
+    try {
+      if (editingVehicle) {
+        const savedVehicle = await updateVehicle(editingVehicle.id, values);
+        setVehicles((current) => current.map((vehicle) => (vehicle.id === editingVehicle.id ? savedVehicle : vehicle)));
+        toast.success("Vehicle updated successfully");
+      } else {
+        const savedVehicle = await createVehicle(values);
+        setVehicles((current) => [savedVehicle, ...current]);
+        toast.success("Vehicle added successfully");
+      }
+
+      closeModal();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to save vehicle"));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    closeModal();
   };
 
-  const handleDelete = (vehicleId) => {
-    setVehicles((current) => current.filter((vehicle) => vehicle.id !== vehicleId));
-    resetPage();
+  const handleDelete = async (vehicleId) => {
+    try {
+      await deleteVehicle(vehicleId);
+      setVehicles((current) => current.filter((vehicle) => vehicle.id !== vehicleId));
+      resetPage();
+      toast.success("Vehicle deleted successfully");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to delete vehicle"));
+    }
   };
+
+  if (isLoading) {
+    return <LoadingState label="Loading vehicles..." />;
+  }
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
       <div className="flex flex-col gap-4 rounded-[32px] border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="mb-3 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-100">
@@ -155,7 +210,7 @@ export default function VehiclesPage() {
       />
 
       <Modal open={isModalOpen} title={editingVehicle ? "Edit vehicle" : "Create vehicle"} onClose={closeModal} size="lg">
-        <VehicleForm vehicle={editingVehicle} onSubmit={handleSubmit} onCancel={closeModal} />
+        <VehicleForm vehicle={editingVehicle} onSubmit={handleSubmit} onCancel={closeModal} isSubmitting={isSubmitting} />
       </Modal>
     </div>
   );
