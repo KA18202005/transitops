@@ -146,7 +146,7 @@ export default function DashboardPage() {
         <FleetStatusChart data={fleetStatusData} />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid items-start gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <CostOverviewChart data={costOverviewData} />
         <div className="space-y-6">
           <RecentActivity activities={recentActivities} />
