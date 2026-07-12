@@ -1,0 +1,79 @@
+from sqlalchemy import (
+    Column,
+    Date,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String
+)
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from app.core.database import Base
+from app.models.enums import DriverStatus
+
+
+class Driver(Base):
+    __tablename__ = "drivers"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True
+    )
+
+    license_number = Column(
+        String(50),
+        unique=True,
+        nullable=False
+    )
+
+    license_category = Column(
+        String(20),
+        nullable=False
+    )
+
+    license_expiry = Column(
+        Date,
+        nullable=False
+    )
+
+    safety_score = Column(
+        Numeric(5, 2),
+        default=100
+    )
+
+    status = Column(
+        Enum(DriverStatus),
+        default=DriverStatus.AVAILABLE,
+        nullable=False
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+    user = relationship(
+        "User",
+        back_populates="driver"
+    )
+
+    trips = relationship(
+        "Trip",
+        back_populates="driver"
+    )
+
+    def __repr__(self):
+        return f"<Driver {self.license_number}>"
