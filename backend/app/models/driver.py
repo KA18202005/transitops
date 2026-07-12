@@ -10,7 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-
+from sqlalchemy import CheckConstraint, Index
 from app.core.database import Base
 from app.models.enums import DriverStatus
 
@@ -73,6 +73,20 @@ class Driver(Base):
     trips = relationship(
         "Trip",
         back_populates="driver"
+    )
+    __table_args__ = (
+
+        CheckConstraint(
+            "safety_score >= 0",
+            name="ck_driver_score_min"
+        ),
+
+        CheckConstraint(
+            "safety_score <= 100",
+            name="ck_driver_score_max"
+        ),
+
+        Index("idx_driver_status", "status"),
     )
 
     def __repr__(self):

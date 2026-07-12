@@ -11,6 +11,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
+from sqlalchemy import CheckConstraint, Index
 from app.models.enums import TripStatus
 
 
@@ -116,6 +117,38 @@ class Trip(Base):
     expenses = relationship(
         "Expense",
         back_populates="trip"
+    )
+    
+    __table_args__ = (
+
+        CheckConstraint(
+            "cargo_weight > 0",
+            name="ck_trip_weight"
+        ),
+
+        CheckConstraint(
+            "planned_distance > 0",
+            name="ck_trip_distance"
+        ),
+
+        CheckConstraint(
+            "actual_distance >= 0",
+            name="ck_actual_distance"
+        ),
+
+        CheckConstraint(
+            "fuel_used >= 0",
+            name="ck_trip_fuel"
+        ),
+
+        CheckConstraint(
+            "revenue >= 0",
+            name="ck_trip_revenue"
+        ),
+
+        Index("idx_trip_vehicle", "vehicle_id"),
+        Index("idx_trip_driver", "driver_id"),
+        Index("idx_trip_status", "status"),
     )
 
     def __repr__(self):
