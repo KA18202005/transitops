@@ -1,24 +1,22 @@
-import { ReceiptText } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { Plus, ReceiptText } from "lucide-react";
 
 export default function ExpenseHeader({ onCreate }) {
   return (
-    <div className="rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] p-6 text-white shadow-xl">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <section className="border border-slate-800 bg-slate-950 p-5 shadow-lg sm:p-7">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="mb-3 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-100">
-            Financial operations
+          <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-300">
+            <ReceiptText size={15} aria-hidden="true" /> Financial operations
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight">Expense Management</h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-300">
+          <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Expense Management</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
             Monitor vehicle expenses, trip costs, spending categories, and operational outflow.
           </p>
         </div>
-        <Button onClick={onCreate} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-slate-900 shadow-none hover:bg-slate-100">
-          <ReceiptText size={18} />
-          Add Expense
-        </Button>
+        <button type="button" onClick={onCreate} className="inline-flex items-center justify-center gap-2 bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 shadow-sm transition hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-slate-950">
+          <Plus size={18} aria-hidden="true" /> Add Expense
+        </button>
       </div>
-    </div>
+    </section>
   );
 }
