@@ -1,5 +1,4 @@
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { getExpenseTypeTone } from "@/components/expenses/expenseUtils";
 
 const palette = ["#10b981", "#f59e0b", "#8b5cf6", "#38bdf8", "#64748b"];
 
