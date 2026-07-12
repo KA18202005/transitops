@@ -29,7 +29,7 @@ export async function listDrivers(params = {}) {
 }
 
 export async function createDriver(values) {
-  const email = values.email || `${values.license_number.replace(/[^a-z0-9]/gi, "").toLowerCase()}@drivers.transitops.local`;
+  const email = values.email || `${values.license_number.replace(/[^a-z0-9]/gi, "").toLowerCase()}@drivers.transitops.com`;
   const { data: user } = await api.post("/users/", {
     role_id: DRIVER_ROLE_ID,
     full_name: values.full_name,
