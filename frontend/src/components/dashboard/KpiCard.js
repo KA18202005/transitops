@@ -28,10 +28,10 @@ const toneClasses = {
   teal: "bg-teal-50 text-teal-600",
 };
 
-export default function KpiCard({ label, value, detail, icon, tone }) {
+export default function KpiCard({ label, value, detail, icon, tone, onClick, selected }) {
   const Icon = iconMap[icon] || Gauge;
   return (
-    <article className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-18px_rgba(2,6,23,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-18px_rgba(2,6,23,0.35)]">
+    <article className={`rounded-[22px] border bg-white p-4 shadow-[0_12px_30px_-18px_rgba(2,6,23,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-18px_rgba(2,6,23,0.35)] ${selected ? "border-sky-400 ring-2 ring-sky-100" : "border-slate-200"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500">{label}</p>
@@ -42,6 +42,7 @@ export default function KpiCard({ label, value, detail, icon, tone }) {
           <Icon size={18} />
         </div>
       </div>
+      {onClick ? <button type="button" onClick={onClick} aria-expanded={selected} className="mt-3 text-xs font-semibold text-sky-700 underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sky-300">{selected ? "Hide breakdown" : "View breakdown"}</button> : null}
     </article>
   );
 }

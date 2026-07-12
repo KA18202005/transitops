@@ -31,6 +31,19 @@ export default function DashboardPage() {
     status: "All",
     region: "All",
   });
+  const [period, setPeriod] = useState("Last 7 days");
+  const [selectedKpi, setSelectedKpi] = useState(null);
+  const [activityModule, setActivityModule] = useState("All");
+
+  const periodMultiplier = period === "Last 30 days" ? 1.18 : period === "This quarter" ? 1.32 : 1;
+  const periodTripData = useMemo(() => tripActivityData.map((item) => ({ ...item, dispatched: Math.round(item.dispatched * periodMultiplier), completed: Math.round(item.completed * periodMultiplier) })), [periodMultiplier]);
+  const periodCostData = useMemo(() => costOverviewData.map((item) => ({ ...item, value: Math.round(item.value * periodMultiplier) })), [periodMultiplier]);
+  const filteredActivities = useMemo(() => activityModule === "All" ? recentActivities : recentActivities.filter((activity) => activity.module === activityModule), [activityModule]);
+  const selectedKpiInsight = {
+    "active-vehicles": "63 Available · 48 On Trip · 11 In Shop",
+    "active-trips": "18 dispatched · 6 scheduled for dispatch",
+    "fleet-utilization": "81% current utilization · 4 points above the weekly baseline",
+  }[selectedKpi];
 
   const filteredKpis = useMemo(() => {
     const statusAdjustments = {
@@ -108,6 +121,8 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="sr-only" htmlFor="dashboard-period">Dashboard period</label>
+            <select id="dashboard-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="rounded-2xl border border-slate-700/80 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-slate-400"><option>Last 7 days</option><option>Last 30 days</option><option>This quarter</option></select>
             <div className="rounded-2xl border border-slate-700/80 bg-slate-900/70 px-3 py-2 text-sm text-slate-200 shadow-inner shadow-black/10">
               {formattedDate}
             </div>
@@ -137,19 +152,25 @@ export default function DashboardPage() {
             detail={kpi.detail}
             icon={kpi.icon}
             tone={kpi.tone}
+            selected={selectedKpi === kpi.id}
+            onClick={["active-vehicles", "active-trips", "fleet-utilization"].includes(kpi.id) ? () => setSelectedKpi((current) => current === kpi.id ? null : kpi.id) : undefined}
           />
         ))}
       </section>
 
+      {selectedKpiInsight ? <section className="border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900"><span className="font-semibold">Operational breakdown:</span> {selectedKpiInsight}</section> : null}
+
+      <section className="grid gap-3 border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Utilization signal</p><p className="mt-1 text-sm font-semibold text-slate-800">Truck category carries the highest active allocation.</p></div><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Maintenance attention</p><p className="mt-1 text-sm font-semibold text-slate-800">11 vehicles are currently in the maintenance queue.</p></div><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Cost driver</p><p className="mt-1 text-sm font-semibold text-slate-800">Fuel remains the largest operational cost category.</p></div></section>
+
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <TripsOverviewChart data={tripActivityData} />
+        <TripsOverviewChart data={periodTripData} />
         <FleetStatusChart data={fleetStatusData} />
       </section>
 
       <section className="grid items-start gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <CostOverviewChart data={costOverviewData} />
+        <CostOverviewChart data={periodCostData} />
         <div className="space-y-6">
-          <RecentActivity activities={recentActivities} />
+          <RecentActivity activities={filteredActivities} activeModule={activityModule} onModuleChange={setActivityModule} />
           <QuickActions actions={quickActions} />
         </div>
       </section>
