@@ -7,7 +7,7 @@ from app.schemas.fuel_log import FuelLogResponse
 from app.services.fuel_service import FuelService
 
 router = APIRouter(
-    prefix="/fuel-logs",
+    prefix="/fuel",
     tags=["Fuel Logs"],
 )
 
