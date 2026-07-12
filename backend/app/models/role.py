@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
-from sqlalchemy.sql import func
+from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from app.core.database import Base
 
@@ -14,7 +14,10 @@ class Role(Base):
 
     description = Column(Text)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
 
     updated_at = Column(
         DateTime(timezone=True),
@@ -22,4 +25,11 @@ class Role(Base):
         onupdate=func.now()
     )
 
-    users = relationship("User", back_populates="role")
+    users = relationship(
+        "User",
+        back_populates="role",
+        cascade="all, delete"
+    )
+
+    def __repr__(self):
+        return f"<Role {self.name}>"
