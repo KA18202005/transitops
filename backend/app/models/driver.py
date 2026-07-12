@@ -91,3 +91,11 @@ class Driver(Base):
 
     def __repr__(self):
         return f"<Driver {self.license_number}>"
+
+    @property
+    def full_name(self):
+        return self.user.full_name if self.user else None
+
+    @property
+    def phone(self):
+        return self.user.phone if self.user else None

@@ -31,5 +31,7 @@ class DriverResponse(BaseModel):
     license_expiry: date
     safety_score: Decimal = Field(..., ge=Decimal("0"), max_digits=5, decimal_places=2)
     status: DriverStatus
+    full_name: str | None = None
+    phone: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

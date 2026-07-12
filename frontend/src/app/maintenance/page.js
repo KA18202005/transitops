@@ -17,6 +17,9 @@ import ErrorState from "@/components/ui/ErrorState";
 import Pagination from "@/components/ui/Pagination";
 import { initialMaintenance } from "@/constants/maintenanceData";
 import { initialVehicles } from "@/constants/vehicleData";
+import { listVehicles } from "@/services/vehicle";
+import { createMaintenance, deleteMaintenance, listMaintenance, updateMaintenance } from "@/services/maintenance";
+import { getApiErrorMessage } from "@/services/api";
 
 const PAGE_SIZE = 6;
 
@@ -45,19 +48,37 @@ export default function MaintenancePage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        setRecords(initialMaintenance);
-        setVehicles(initialVehicles);
-        setError("");
-      } catch {
-        setError("Unable to load maintenance data");
-      } finally {
-        setIsLoading(false);
-      }
-    }, 350);
+    let mounted = true;
 
-    return () => window.clearTimeout(timer);
+    async function loadMaintenanceData() {
+      try {
+        const [recordData, vehicleData] = await Promise.all([
+          listMaintenance(),
+          listVehicles(),
+        ]);
+        if (mounted) {
+          setRecords(recordData);
+          setVehicles(vehicleData);
+          setError("");
+        }
+      } catch (loadError) {
+        if (mounted) {
+          setRecords(initialMaintenance);
+          setVehicles(initialVehicles);
+          setError("");
+          toast.error(`Using demo maintenance data: ${getApiErrorMessage(loadError, "API unavailable")}`);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadMaintenanceData();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const filteredRecords = useMemo(() => {
@@ -159,23 +180,24 @@ export default function MaintenancePage() {
 
   const handleCreateOrEdit = async (values) => {
     setIsSubmitting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
 
-    if (editingRecord) {
-      setRecords((current) => current.map((record) => (record.id === editingRecord.id ? { ...record, ...values } : record)));
-      toast.success("Maintenance record updated successfully");
-    } else {
-      const newRecord = {
-        id: Date.now(),
-        created_at: new Date().toISOString(),
-        ...values,
-      };
-      setRecords((current) => [newRecord, ...current]);
-      toast.success("Maintenance record created successfully");
+    try {
+      if (editingRecord) {
+        const savedRecord = await updateMaintenance(editingRecord.id, { ...editingRecord, ...values });
+        setRecords((current) => current.map((record) => (record.id === editingRecord.id ? savedRecord : record)));
+        toast.success("Maintenance record updated successfully");
+      } else {
+        const savedRecord = await createMaintenance(values);
+        setRecords((current) => [savedRecord, ...current]);
+        toast.success("Maintenance record created successfully");
+      }
+
+      closeFormModal();
+    } catch (submitError) {
+      toast.error(getApiErrorMessage(submitError, "Unable to save maintenance record"));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    closeFormModal();
   };
 
   const handleStart = async () => {
@@ -205,14 +227,17 @@ export default function MaintenancePage() {
     }
 
     setIsStarting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-
-    setRecords((current) => current.map((item) => (item.id === record.id ? { ...item, status: "In Progress", start_date: item.start_date || new Date().toISOString().slice(0, 10) } : item)));
-    setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: "In Shop" } : item)));
-
-    setIsStarting(false);
-    closeStartModal();
-    toast.success("Maintenance started successfully");
+    try {
+      const savedRecord = await updateMaintenance(record.id, { ...record, status: "In Progress", start_date: record.start_date || new Date().toISOString().slice(0, 10) });
+      setRecords((current) => current.map((item) => (item.id === record.id ? savedRecord : item)));
+      setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: "In Shop" } : item)));
+      closeStartModal();
+      toast.success("Maintenance started successfully");
+    } catch (startError) {
+      toast.error(getApiErrorMessage(startError, "Unable to start maintenance"));
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const handleComplete = async (values) => {
@@ -242,14 +267,17 @@ export default function MaintenancePage() {
     }
 
     setIsCompleting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-
-    setRecords((current) => current.map((item) => (item.id === record.id ? { ...item, status: "Completed", end_date: values.end_date, maintenance_cost: values.maintenance_cost } : item)));
-    setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: item.status === "Retired" ? "Retired" : "Available" } : item)));
-
-    setIsCompleting(false);
-    closeCompleteModal();
-    toast.success("Maintenance completed successfully");
+    try {
+      const savedRecord = await updateMaintenance(record.id, { ...record, status: "Completed", end_date: values.end_date, maintenance_cost: values.maintenance_cost });
+      setRecords((current) => current.map((item) => (item.id === record.id ? savedRecord : item)));
+      setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: item.status === "Retired" ? "Retired" : "Available" } : item)));
+      closeCompleteModal();
+      toast.success("Maintenance completed successfully");
+    } catch (completeError) {
+      toast.error(getApiErrorMessage(completeError, "Unable to complete maintenance"));
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -261,12 +289,16 @@ export default function MaintenancePage() {
     }
 
     setIsDeleting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-
-    setRecords((current) => current.filter((item) => item.id !== recordToDelete.id));
-    setIsDeleting(false);
-    closeDeleteModal();
-    toast.success("Maintenance record deleted successfully");
+    try {
+      await deleteMaintenance(recordToDelete.id);
+      setRecords((current) => current.filter((item) => item.id !== recordToDelete.id));
+      closeDeleteModal();
+      toast.success("Maintenance record deleted successfully");
+    } catch (deleteError) {
+      toast.error(getApiErrorMessage(deleteError, "Unable to delete maintenance record"));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {

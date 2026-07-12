@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
 import CostOverviewChart from "../../components/dashboard/CostOverviewChart";
 import DashboardFilters from "../../components/dashboard/DashboardFilters";
 import FleetStatusChart from "../../components/dashboard/FleetStatusChart";
@@ -16,6 +17,8 @@ import {
   recentActivities,
   tripActivityData,
 } from "../../components/dashboard/dashboardData";
+import { getDashboardSummary } from "@/services/dashboard";
+import { getApiErrorMessage } from "@/services/api";
 
 const today = new Date();
 const formattedDate = today.toLocaleDateString("en-US", {
@@ -34,6 +37,27 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState("Last 7 days");
   const [selectedKpi, setSelectedKpi] = useState(null);
   const [activityModule, setActivityModule] = useState("All");
+  const [summary, setSummary] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSummary() {
+      try {
+        const data = await getDashboardSummary();
+        if (mounted) {
+          setSummary(data);
+        }
+      } catch (error) {
+        toast.error(`Using demo dashboard data: ${getApiErrorMessage(error, "API unavailable")}`);
+      }
+    }
+
+    loadSummary();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const periodMultiplier = period === "Last 30 days" ? 1.18 : period === "This quarter" ? 1.32 : 1;
   const periodTripData = useMemo(() => tripActivityData.map((item) => ({ ...item, dispatched: Math.round(item.dispatched * periodMultiplier), completed: Math.round(item.completed * periodMultiplier) })), [periodMultiplier]);
@@ -53,6 +77,29 @@ export default function DashboardPage() {
     };
 
     return dashboardKpis.map((kpi) => {
+      if (summary) {
+        if (kpi.id === "active-vehicles") {
+          return { ...kpi, value: String(summary.total_vehicles) };
+        }
+
+        if (kpi.id === "available-vehicles") {
+          return { ...kpi, value: String(summary.vehicles_available) };
+        }
+
+        if (kpi.id === "active-trips") {
+          return { ...kpi, value: String(summary.trips_running) };
+        }
+
+        if (kpi.id === "drivers-duty") {
+          return { ...kpi, value: String(summary.drivers_available) };
+        }
+
+        if (kpi.id === "fleet-utilization") {
+          const utilization = summary.total_vehicles ? Math.round((summary.trips_running / summary.total_vehicles) * 100) : 0;
+          return { ...kpi, value: `${utilization}%`, detail: `${summary.trips_completed} completed trips` };
+        }
+      }
+
       if (kpi.id === "active-vehicles") {
         return {
           ...kpi,
@@ -97,7 +144,7 @@ export default function DashboardPage() {
 
       return kpi;
     });
-  }, [filters]);
+  }, [filters, summary]);
 
   const handleFilterChange = (key, value) => {
     setFilters((current) => ({ ...current, [key]: value }));
@@ -105,6 +152,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
       <section className="overflow-hidden rounded-[30px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_32%),linear-gradient(135deg,_#06111f_0%,_#101d31_55%,_#0c172b_100%)] p-6 text-white shadow-[0_16px_50px_-24px_rgba(2,6,23,0.65)] sm:p-8">
         <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

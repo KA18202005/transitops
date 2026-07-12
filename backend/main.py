@@ -1,4 +1,5 @@
 from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.dashboard import router as dashboard_router
@@ -16,6 +17,17 @@ app = FastAPI(
     title="TransitOps API",
     description="Backend API for TransitOps Smart Transport Operations Platform",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Register API routers

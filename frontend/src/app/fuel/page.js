@@ -16,6 +16,10 @@ import Pagination from "@/components/ui/Pagination";
 import { initialFuelLogs } from "@/constants/fuelData";
 import { initialTrips } from "@/constants/tripData";
 import { initialVehicles } from "@/constants/vehicleData";
+import { listVehicles } from "@/services/vehicle";
+import { listTrips } from "@/services/trip";
+import { createFuelLog, deleteFuelLog, listFuelLogs, updateFuelLog } from "@/services/fuel";
+import { getApiErrorMessage } from "@/services/api";
 
 const PAGE_SIZE = 6;
 
@@ -41,20 +45,40 @@ export default function FuelPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        setLogs(initialFuelLogs);
-        setVehicles(initialVehicles);
-        setTrips(initialTrips);
-        setError("");
-      } catch {
-        setError("Unable to load fuel data");
-      } finally {
-        setIsLoading(false);
-      }
-    }, 350);
+    let mounted = true;
 
-    return () => window.clearTimeout(timer);
+    async function loadFuelData() {
+      try {
+        const [logData, vehicleData, tripData] = await Promise.all([
+          listFuelLogs(),
+          listVehicles(),
+          listTrips(),
+        ]);
+        if (mounted) {
+          setLogs(logData);
+          setVehicles(vehicleData);
+          setTrips(tripData);
+          setError("");
+        }
+      } catch (loadError) {
+        if (mounted) {
+          setLogs(initialFuelLogs);
+          setVehicles(initialVehicles);
+          setTrips(initialTrips);
+          setError("");
+          toast.error(`Using demo fuel data: ${getApiErrorMessage(loadError, "API unavailable")}`);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadFuelData();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const filteredLogs = useMemo(() => {
@@ -144,33 +168,39 @@ export default function FuelPage() {
 
   const handleCreateOrEdit = async (values) => {
     setIsSubmitting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
 
-    if (editingLog) {
-      setLogs((current) => current.map((log) => (log.id === editingLog.id ? { ...log, ...values, trip_id: values.trip_id || null } : log)));
-      toast.success("Fuel log updated successfully");
-    } else {
-      const newLog = {
-        id: Date.now(),
-        ...values,
-        trip_id: values.trip_id || null,
-      };
-      setLogs((current) => [newLog, ...current]);
-      toast.success("Fuel log added successfully");
+    try {
+      if (editingLog) {
+        const savedLog = await updateFuelLog(editingLog.id, { ...editingLog, ...values });
+        setLogs((current) => current.map((log) => (log.id === editingLog.id ? savedLog : log)));
+        toast.success("Fuel log updated successfully");
+      } else {
+        const savedLog = await createFuelLog(values);
+        setLogs((current) => [savedLog, ...current]);
+        toast.success("Fuel log added successfully");
+      }
+
+      closeFormModal();
+    } catch (submitError) {
+      toast.error(getApiErrorMessage(submitError, "Unable to save fuel log"));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    closeFormModal();
   };
 
   const handleDelete = async () => {
     if (!logToDelete) return;
     setIsDeleting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-    setLogs((current) => current.filter((log) => log.id !== logToDelete.id));
-    setIsDeleting(false);
-    closeDeleteModal();
-    toast.success("Fuel log deleted successfully");
+    try {
+      await deleteFuelLog(logToDelete.id);
+      setLogs((current) => current.filter((log) => log.id !== logToDelete.id));
+      closeDeleteModal();
+      toast.success("Fuel log deleted successfully");
+    } catch (deleteError) {
+      toast.error(getApiErrorMessage(deleteError, "Unable to delete fuel log"));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {

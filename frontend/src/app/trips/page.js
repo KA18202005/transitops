@@ -18,6 +18,10 @@ import ErrorState from "@/components/trips/ErrorState";
 import { initialTrips } from "@/constants/tripData";
 import { initialVehicles } from "@/constants/vehicleData";
 import { initialDrivers } from "@/constants/driverData";
+import { listVehicles } from "@/services/vehicle";
+import { listDrivers } from "@/services/driver";
+import { createTrip, listTrips, updateTrip } from "@/services/trip";
+import { getApiErrorMessage } from "@/services/api";
 
 const PAGE_SIZE = 6;
 
@@ -48,20 +52,40 @@ export default function TripsPage() {
   const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        setTrips(initialTrips);
-        setVehicles(initialVehicles);
-        setDrivers(initialDrivers);
-        setError("");
-      } catch {
-        setError("Unable to load trip data");
-      } finally {
-        setIsLoading(false);
-      }
-    }, 350);
+    let mounted = true;
 
-    return () => window.clearTimeout(timer);
+    async function loadTripData() {
+      try {
+        const [tripData, vehicleData, driverData] = await Promise.all([
+          listTrips(),
+          listVehicles(),
+          listDrivers(),
+        ]);
+        if (mounted) {
+          setTrips(tripData);
+          setVehicles(vehicleData);
+          setDrivers(driverData);
+          setError("");
+        }
+      } catch (loadError) {
+        if (mounted) {
+          setTrips(initialTrips);
+          setVehicles(initialVehicles);
+          setDrivers(initialDrivers);
+          setError("");
+          toast.error(`Using demo trip data: ${getApiErrorMessage(loadError, "API unavailable")}`);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadTripData();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const filteredTrips = useMemo(() => {
@@ -184,24 +208,27 @@ export default function TripsPage() {
 
   const handleCreateOrEdit = async (values) => {
     setIsSubmitting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
 
-    if (editingTrip) {
-      setTrips((current) => current.map((trip) => (trip.id === editingTrip.id ? { ...trip, ...values } : trip)));
-      toast.success("Trip updated successfully");
-    } else {
-      const newTrip = {
-        id: Date.now(),
-        trip_number: `TRIP-${String(Date.now()).slice(-4)}`,
-        created_at: new Date().toISOString(),
-        ...values,
-      };
-      setTrips((current) => [newTrip, ...current]);
-      toast.success("Trip created successfully");
+    try {
+      if (editingTrip) {
+        const savedTrip = await updateTrip(editingTrip.id, { ...editingTrip, ...values });
+        setTrips((current) => current.map((trip) => (trip.id === editingTrip.id ? savedTrip : trip)));
+        toast.success("Trip updated successfully");
+      } else {
+        const savedTrip = await createTrip({
+          trip_number: `TRIP-${String(Date.now()).slice(-6)}`,
+          ...values,
+        });
+        setTrips((current) => [savedTrip, ...current]);
+        toast.success("Trip created successfully");
+      }
+
+      closeFormModal();
+    } catch (submitError) {
+      toast.error(getApiErrorMessage(submitError, "Unable to save trip"));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    closeFormModal();
   };
 
   const handleDispatch = async () => {
@@ -241,13 +268,18 @@ export default function TripsPage() {
     }
 
     setIsDispatching(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-    setTrips((current) => current.map((item) => (item.id === trip.id ? { ...item, status: "Dispatched", departure_time: new Date().toISOString() } : item)));
-    setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: "On Trip" } : item)));
-    setDrivers((current) => current.map((item) => (item.id === driver.id ? { ...item, status: "On Trip" } : item)));
-    setIsDispatching(false);
-    closeDispatchModal();
-    toast.success("Trip dispatched successfully");
+    try {
+      const savedTrip = await updateTrip(trip.id, { ...trip, status: "Dispatched", departure_time: new Date().toISOString() });
+      setTrips((current) => current.map((item) => (item.id === trip.id ? savedTrip : item)));
+      setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: "On Trip" } : item)));
+      setDrivers((current) => current.map((item) => (item.id === driver.id ? { ...item, status: "On Trip" } : item)));
+      closeDispatchModal();
+      toast.success("Trip dispatched successfully");
+    } catch (dispatchError) {
+      toast.error(getApiErrorMessage(dispatchError, "Unable to dispatch trip"));
+    } finally {
+      setIsDispatching(false);
+    }
   };
 
   const handleComplete = async (values) => {
@@ -257,13 +289,18 @@ export default function TripsPage() {
     const driver = drivers.find((item) => item.id === trip.driver_id);
 
     setIsCompleting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-    setTrips((current) => current.map((item) => (item.id === trip.id ? { ...item, status: "Completed", actual_distance: values.actual_distance, fuel_used: values.fuel_used, arrival_time: values.arrival_time, revenue: values.revenue, final_odometer: values.final_odometer } : item)));
-    setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: "Available" } : item)));
-    setDrivers((current) => current.map((item) => (item.id === driver.id ? { ...item, status: "Available" } : item)));
-    setIsCompleting(false);
-    closeCompleteModal();
-    toast.success("Trip completed successfully");
+    try {
+      const savedTrip = await updateTrip(trip.id, { ...trip, ...values, status: "Completed" });
+      setTrips((current) => current.map((item) => (item.id === trip.id ? savedTrip : item)));
+      setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: "Available" } : item)));
+      setDrivers((current) => current.map((item) => (item.id === driver.id ? { ...item, status: "Available" } : item)));
+      closeCompleteModal();
+      toast.success("Trip completed successfully");
+    } catch (completeError) {
+      toast.error(getApiErrorMessage(completeError, "Unable to complete trip"));
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   const handleCancel = async () => {
@@ -273,15 +310,20 @@ export default function TripsPage() {
     const driver = drivers.find((item) => item.id === trip.driver_id);
 
     setIsCancelling(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-    setTrips((current) => current.map((item) => (item.id === trip.id ? { ...item, status: "Cancelled" } : item)));
-    if (trip.status === "Dispatched") {
-      setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: "Available" } : item)));
-      setDrivers((current) => current.map((item) => (item.id === driver.id ? { ...item, status: "Available" } : item)));
+    try {
+      const savedTrip = await updateTrip(trip.id, { ...trip, status: "Cancelled" });
+      setTrips((current) => current.map((item) => (item.id === trip.id ? savedTrip : item)));
+      if (trip.status === "Dispatched") {
+        setVehicles((current) => current.map((item) => (item.id === vehicle.id ? { ...item, status: "Available" } : item)));
+        setDrivers((current) => current.map((item) => (item.id === driver.id ? { ...item, status: "Available" } : item)));
+      }
+      closeCancelModal();
+      toast.success("Trip cancelled successfully");
+    } catch (cancelError) {
+      toast.error(getApiErrorMessage(cancelError, "Unable to cancel trip"));
+    } finally {
+      setIsCancelling(false);
     }
-    setIsCancelling(false);
-    closeCancelModal();
-    toast.success("Trip cancelled successfully");
   };
 
   if (isLoading) {

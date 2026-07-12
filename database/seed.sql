@@ -8,7 +8,8 @@ VALUES
 ('Fleet Manager','Fleet Operations Manager'),
 ('Driver','Vehicle Driver'),
 ('Safety Officer','Safety Compliance'),
-('Financial Analyst','Finance Department');
+('Financial Analyst','Finance Department')
+ON CONFLICT (name) DO NOTHING;
 
 -- ==========================
 -- Regions
@@ -19,7 +20,9 @@ VALUES
 ('North','NR'),
 ('South','SR'),
 ('East','ER'),
-('West','WR');
+('West','WR'),
+('Central','CR')
+ON CONFLICT (name) DO NOTHING;
 
 -- ==========================
 -- Vehicle Types
@@ -30,4 +33,6 @@ VALUES
 ('Truck','Heavy Goods Vehicle'),
 ('Mini Truck','Small Cargo Vehicle'),
 ('Van','Delivery Van'),
-('Pickup','Pickup Truck');
+('Pickup','Pickup Truck'),
+('Trailer','Long-haul trailer')
+ON CONFLICT (name) DO NOTHING;
