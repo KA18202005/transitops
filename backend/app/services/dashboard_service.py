@@ -4,7 +4,6 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.repositories.driver_repo import DriverRepository
-from app.repositories.expense_repo import ExpenseRepository
 from app.repositories.fuel_repo import FuelRepository
 from app.repositories.maintenance_repo import MaintenanceRepository
 from app.repositories.trip_repo import TripRepository
@@ -28,54 +27,40 @@ class DashboardService:
         trips = TripRepository.get_all(db, limit=limit)
         maintenance_logs = MaintenanceRepository.get_all(db, limit=limit)
         fuel_logs = FuelRepository.get_all(db, limit=limit)
-        expenses = ExpenseRepository.get_all(db, limit=limit)
 
-        total_revenue = sum((trip.revenue or Decimal("0")) for trip in trips)
-        total_expenses = sum((expense.amount or Decimal("0")) for expense in expenses)
-        total_fuel_cost = sum((fuel_log.cost or Decimal("0")) for fuel_log in fuel_logs)
-        total_maintenance_cost = sum(
+        revenue = sum((trip.revenue or Decimal("0")) for trip in trips)
+        fuel_cost = sum((fuel_log.cost or Decimal("0")) for fuel_log in fuel_logs)
+        maintenance_cost = sum(
             (maintenance.maintenance_cost or Decimal("0"))
             for maintenance in maintenance_logs
         )
-        total_cost = total_expenses + total_fuel_cost + total_maintenance_cost
-        net_revenue = total_revenue - total_cost
+        total_cost = fuel_cost + maintenance_cost
 
         return {
-            "vehicles": {
-                "total": len(vehicles),
-                "active": sum(1 for vehicle in vehicles if vehicle.is_active),
-            },
-            "drivers": {
-                "total": len(drivers),
-                "available": sum(
-                    1
-                    for driver in drivers
-                    if DashboardService._enum_value(driver.status) == "Available"
-                ),
-            },
-            "trips": {
-                "total": len(trips),
-                "completed": sum(
-                    1
-                    for trip in trips
-                    if DashboardService._enum_value(trip.status) == "Completed"
-                ),
-            },
-            "maintenance": {
-                "total": len(maintenance_logs),
-                "pending": sum(
-                    1
-                    for maintenance in maintenance_logs
-                    if DashboardService._enum_value(maintenance.status) == "Pending"
-                ),
-            },
-            "financials": {
-                "total_revenue": total_revenue,
-                "total_expenses": total_expenses,
-                "total_fuel_cost": total_fuel_cost,
-                "total_maintenance_cost": total_maintenance_cost,
-                "total_cost": total_cost,
-                "net_revenue": net_revenue,
-                "roi_percentage": calculate_roi(total_revenue, total_cost),
-            },
+            "total_vehicles": len(vehicles),
+            "vehicles_available": sum(
+                1
+                for vehicle in vehicles
+                if vehicle.is_active
+                and DashboardService._enum_value(vehicle.status) == "Available"
+            ),
+            "drivers_available": sum(
+                1
+                for driver in drivers
+                if DashboardService._enum_value(driver.status) == "Available"
+            ),
+            "trips_running": sum(
+                1
+                for trip in trips
+                if DashboardService._enum_value(trip.status) == "Dispatched"
+            ),
+            "trips_completed": sum(
+                1
+                for trip in trips
+                if DashboardService._enum_value(trip.status) == "Completed"
+            ),
+            "fuel_cost": fuel_cost,
+            "maintenance_cost": maintenance_cost,
+            "revenue": revenue,
+            "roi": calculate_roi(revenue, total_cost),
         }
