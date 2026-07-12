@@ -77,6 +77,8 @@ class User(Base):
         "ActivityLog",
         back_populates="user"
     )
+    
+    
 
     def __repr__(self):
         return f"<User {self.email}>"

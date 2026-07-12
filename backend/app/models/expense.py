@@ -12,6 +12,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
+from sqlalchemy import CheckConstraint, Index
 from app.models.enums import ExpenseType
 
 
@@ -62,6 +63,17 @@ class Expense(Base):
     vehicle = relationship(
         "Vehicle",
         back_populates="expenses"
+    )
+    
+    __table_args__ = (
+
+        CheckConstraint(
+            "amount >= 0",
+            name="ck_expense_amount"
+        ),
+
+        Index("idx_expense_trip", "trip_id"),
+        Index("idx_expense_vehicle", "vehicle_id"),
     )
 
     def __repr__(self):

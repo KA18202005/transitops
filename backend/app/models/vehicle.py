@@ -11,6 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy import CheckConstraint, Index
 
 from app.core.database import Base
 from app.models.enums import VehicleStatus
@@ -116,6 +117,25 @@ class Vehicle(Base):
     expenses = relationship(
         "Expense",
         back_populates="vehicle"
+    )
+    
+    __table_args__ = (
+        CheckConstraint(
+            "max_load_capacity > 0",
+            name="ck_vehicle_max_load"
+        ),
+        CheckConstraint(
+            "current_odometer >= 0",
+            name="ck_vehicle_odometer"
+        ),
+        CheckConstraint(
+            "acquisition_cost >= 0",
+            name="ck_vehicle_cost"
+        ),
+
+        Index("idx_vehicle_status", "status"),
+        Index("idx_vehicle_region", "region_id"),
+        Index("idx_vehicle_type", "vehicle_type_id"),
     )
 
     def __repr__(self):

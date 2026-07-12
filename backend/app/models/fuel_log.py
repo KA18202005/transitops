@@ -9,6 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy import CheckConstraint, Index
 
 from app.core.database import Base
 
@@ -62,6 +63,21 @@ class FuelLog(Base):
     trip = relationship(
         "Trip",
         back_populates="fuel_logs"
+    )
+    __table_args__ = (
+
+        CheckConstraint(
+            "liters > 0",
+            name="ck_fuel_liters"
+        ),
+
+        CheckConstraint(
+            "cost >= 0",
+            name="ck_fuel_cost"
+        ),
+
+        Index("idx_fuel_vehicle", "vehicle_id"),
+        Index("idx_fuel_trip", "trip_id"),
     )
 
     def __repr__(self):
