@@ -1,0 +1,4 @@
+import SettingsSection from "@/components/settings/SettingsSection";
+import PreferenceCheckbox from "@/components/settings/PreferenceCheckbox";
+const options = [["compactRows", "Compact table rows", "Use denser record rows where available."], ["reducedMotion", "Reduced motion", "Limit non-essential movement in the workspace."], ["sidebarLabels", "Sidebar labels", "Keep navigation text labels visible."]];
+export default function InterfacePreferences({ settings, onChange }) { return <SettingsSection title="Interface preferences" description="Fine-tune the presentation of this workspace.">{options.map(([key, label, description]) => <PreferenceCheckbox key={key} id={key} label={label} description={description} checked={settings[key]} onChange={(value) => onChange(key, value)} />)}</SettingsSection>; }

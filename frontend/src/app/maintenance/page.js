@@ -318,7 +318,6 @@ export default function MaintenancePage() {
         <>
           <div className="flex flex-col gap-2 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
             <div>Showing {Math.min((safePage - 1) * PAGE_SIZE + 1, filteredRecords.length)}–{Math.min(safePage * PAGE_SIZE, filteredRecords.length)} of {filteredRecords.length} records</div>
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-400">Client-side maintenance workflow</div>
           </div>
           <MaintenanceTable records={pagedRecords} vehicles={vehicles} onView={openViewModal} onEdit={openEditModal} onStart={openStartModal} onComplete={openCompleteModal} onDelete={openDeleteModal} />
           <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />

@@ -326,7 +326,6 @@ export default function TripsPage() {
         <>
           <div className="flex flex-col gap-2 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
             <div>Showing {Math.min((safePage - 1) * PAGE_SIZE + 1, filteredTrips.length)}–{Math.min(safePage * PAGE_SIZE, filteredTrips.length)} of {filteredTrips.length} trips</div>
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-400">Client-side workflow</div>
           </div>
           <TripTable trips={pagedTrips} onView={openViewModal} onEdit={openEditModal} onDispatch={openDispatchModal} onComplete={openCompleteModal} onCancel={openCancelModal} />
           <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />

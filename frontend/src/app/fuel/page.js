@@ -234,7 +234,6 @@ export default function FuelPage() {
         <>
           <div className="flex flex-col gap-2 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
             <div>Showing {Math.min((safePage - 1) * PAGE_SIZE + 1, filteredLogs.length)}–{Math.min(safePage * PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length} logs</div>
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-400">Client-side fuel workflow</div>
           </div>
           <FuelTable logs={pagedLogs} vehicles={vehicles} trips={trips} onView={openViewModal} onEdit={openEditModal} onDelete={openDeleteModal} />
           <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />
