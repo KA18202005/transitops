@@ -23,8 +23,14 @@ const Input = forwardRef(function Input(
           {label}
         </label>
       ) : null}
-      <div className={`flex items-center rounded-lg border bg-white px-3 py-2 shadow-sm transition-colors ${error ? "border-red-400" : "border-slate-200 focus-within:border-slate-400"}`}>
-        {leftIcon ? <span className="mr-2 text-slate-400">{leftIcon}</span> : null}
+      <div
+        className={`flex items-center rounded-xl border bg-slate-50 px-3.5 py-3 shadow-sm transition-all duration-200 ${
+          error
+            ? "border-red-400 bg-red-50 shadow-red-100"
+            : "border-slate-200 focus-within:border-slate-400 focus-within:bg-white focus-within:shadow-md"
+        }`}
+      >
+        {leftIcon ? <span className="mr-2.5 text-slate-400">{leftIcon}</span> : null}
         <input
           ref={ref}
           id={inputId}
@@ -35,7 +41,7 @@ const Input = forwardRef(function Input(
         />
         {rightElement ? <span className="ml-2">{rightElement}</span> : null}
       </div>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
     </div>
   );
 });

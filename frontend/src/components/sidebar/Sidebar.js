@@ -33,16 +33,16 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-slate-950 text-slate-100 shadow-xl transition-transform duration-200 ease-out lg:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-800/80 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_30%),linear-gradient(180deg,_#06101d_0%,_#0d1727_100%)] text-slate-100 shadow-[16px_0_40px_-24px_rgba(2,6,23,0.85)] transition-transform duration-200 ease-out lg:translate-x-0 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
-      <div className="flex items-center gap-3 border-b border-slate-800 px-6 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-white">
+      <div className="flex items-center gap-3 border-b border-slate-800/80 px-6 py-6">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700/80 bg-slate-900/80 text-sky-300 shadow-sm">
           <Route size={18} />
         </div>
         <div>
-          <p className="text-lg font-semibold tracking-tight">TransitOps</p>
+          <p className="text-lg font-semibold tracking-tight text-white">TransitOps</p>
           <p className="text-sm text-slate-400">Fleet operations</p>
         </div>
       </div>
@@ -57,21 +57,23 @@ export default function Sidebar({ isOpen, onClose }) {
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 active
-                  ? "bg-slate-800 text-white shadow-sm"
-                  : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                  ? "bg-slate-800/90 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]"
+                  : "text-slate-300 hover:bg-slate-900/80 hover:text-white"
               }`}
             >
-              <Icon size={18} />
+              <span className={`rounded-lg p-2 ${active ? "bg-slate-700/80 text-sky-300" : "bg-slate-900/80 text-slate-400"}`}>
+                <Icon size={16} />
+              </span>
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-slate-800 p-4">
-        <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
+      <div className="border-t border-slate-800/80 p-4">
+        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-3 shadow-inner shadow-black/10">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-200">
               <UserRound size={18} />
@@ -83,7 +85,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
           <button
             type="button"
-            className="mt-3 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-white"
+            className="mt-3 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500"
           >
             <LogOut size={16} />
             <span>Sign out</span>
