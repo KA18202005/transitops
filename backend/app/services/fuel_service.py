@@ -3,10 +3,12 @@ from typing import Any, Mapping
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.models.enums import TripStatus
 from app.models.fuel_log import FuelLog
 from app.repositories.fuel_repo import FuelRepository
 from app.repositories.trip_repo import TripRepository
 from app.repositories.vehicle_repo import VehicleRepository
+from app.services.business_rules import coerce_date, coerce_enum, decimal_or_zero
 
 
 class FuelService:
@@ -25,10 +27,22 @@ class FuelService:
         vehicle_id = payload.get("vehicle_id")
         trip_id = payload.get("trip_id")
 
+        if vehicle_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Vehicle is required for a fuel log",
+            )
+
+        if trip_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Trip is required for a fuel log",
+            )
+
         vehicle = None
         trip = None
 
-        if vehicle_id:
+        if vehicle_id is not None:
             vehicle = VehicleRepository.get_by_id(db, vehicle_id)
             if vehicle is None:
                 raise HTTPException(
@@ -36,7 +50,7 @@ class FuelService:
                     detail="Vehicle not found",
                 )
 
-        if trip_id:
+        if trip_id is not None:
             trip = TripRepository.get_by_id(db, trip_id)
             if trip is None:
                 raise HTTPException(
@@ -48,6 +62,32 @@ class FuelService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Fuel log vehicle must match the trip vehicle",
+            )
+
+        if trip is not None:
+            trip_status = coerce_enum(trip.status, TripStatus, "trip status")
+            if trip_status in {TripStatus.DRAFT, TripStatus.CANCELLED}:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Fuel logs can only be added to dispatched or completed trips",
+                )
+
+    @staticmethod
+    def _validate_payload(payload: dict[str, Any]) -> None:
+        """Validate and normalize fuel log payload values."""
+        if "date" in payload and payload["date"] is not None:
+            payload["date"] = coerce_date(payload["date"], "date")
+
+        if "liters" in payload and decimal_or_zero(payload["liters"]) <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Fuel liters must be greater than zero",
+            )
+
+        if "cost" in payload and decimal_or_zero(payload["cost"]) <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Fuel cost must be greater than zero",
             )
 
     @staticmethod
@@ -71,6 +111,7 @@ class FuelService:
         """Create a fuel log after enforcing business rules."""
         payload = FuelService._to_dict(data)
         FuelService._validate_related_entities(db, payload)
+        FuelService._validate_payload(payload)
         return FuelRepository.create(db, payload)
 
     @staticmethod
@@ -89,6 +130,7 @@ class FuelService:
         }
 
         FuelService._validate_related_entities(db, merged_payload)
+        FuelService._validate_payload(payload)
         updated_fuel_log = FuelRepository.update(db, fuel_log_id, payload)
         if updated_fuel_log is None:
             raise HTTPException(

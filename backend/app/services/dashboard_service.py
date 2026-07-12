@@ -9,6 +9,7 @@ from app.repositories.fuel_repo import FuelRepository
 from app.repositories.maintenance_repo import MaintenanceRepository
 from app.repositories.trip_repo import TripRepository
 from app.repositories.vehicle_repo import VehicleRepository
+from app.services.business_rules import calculate_roi
 
 
 class DashboardService:
@@ -32,6 +33,12 @@ class DashboardService:
         total_revenue = sum((trip.revenue or Decimal("0")) for trip in trips)
         total_expenses = sum((expense.amount or Decimal("0")) for expense in expenses)
         total_fuel_cost = sum((fuel_log.cost or Decimal("0")) for fuel_log in fuel_logs)
+        total_maintenance_cost = sum(
+            (maintenance.maintenance_cost or Decimal("0"))
+            for maintenance in maintenance_logs
+        )
+        total_cost = total_expenses + total_fuel_cost + total_maintenance_cost
+        net_revenue = total_revenue - total_cost
 
         return {
             "vehicles": {
@@ -66,6 +73,9 @@ class DashboardService:
                 "total_revenue": total_revenue,
                 "total_expenses": total_expenses,
                 "total_fuel_cost": total_fuel_cost,
-                "net_revenue": total_revenue - total_expenses - total_fuel_cost,
+                "total_maintenance_cost": total_maintenance_cost,
+                "total_cost": total_cost,
+                "net_revenue": net_revenue,
+                "roi_percentage": calculate_roi(total_revenue, total_cost),
             },
         }
