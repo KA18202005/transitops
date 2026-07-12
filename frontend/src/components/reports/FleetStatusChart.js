@@ -1,0 +1,4 @@
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Chart } from "@/components/reports/UtilizationChart";
+const colors = ["#06b6d4", "#4f46e5", "#d97706", "#64748b"];
+export default function FleetStatusChart({ data }) { const total = data.reduce((sum, item) => sum + item.value, 0); return <Chart title="Vehicle status distribution" subtitle="Current fleet status within filtered vehicles">{total ? <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={data} dataKey="value" nameKey="name" outerRadius={82} label={({ name, value }) => `${name}: ${value}`}>{data.map((entry, index) => <Cell key={entry.name} fill={colors[index]} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center bg-slate-50 text-sm text-slate-500">No vehicle status data</div>}</Chart>; }

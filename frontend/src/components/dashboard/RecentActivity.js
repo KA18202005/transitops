@@ -16,13 +16,14 @@ const statusClasses = {
   Completed: "bg-emerald-50 text-emerald-700",
 };
 
-export default function RecentActivity({ activities }) {
+export default function RecentActivity({ activities, activeModule = "All", onModuleChange }) {
   return (
     <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_45px_-24px_rgba(2,6,23,0.35)]">
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
         <p className="text-sm text-slate-500">Latest operational updates</p>
       </div>
+      {onModuleChange ? <div className="mb-4 flex flex-wrap gap-2" aria-label="Filter recent activity">{["All", "Trips", "Maintenance", "Fuel", "Drivers"].map((module) => <button key={module} type="button" onClick={() => onModuleChange(module)} className={`rounded-full px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-slate-300 ${activeModule === module ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{module}</button>)}</div> : null}
       <div className="space-y-3">
         {activities.map((activity) => {
           const Icon = iconMap[activity.icon] || Route;

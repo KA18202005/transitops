@@ -1,0 +1,2 @@
+export const settingsStorageKey = "transitops-workspace-preferences";
+export const defaultSettings = { licenceAlerts: true, maintenanceReminders: true, tripNotifications: true, fuelExpenseAlerts: true, weeklySummary: false, defaultRegion: "Central", dateFormat: "DD/MM/YYYY", recentActivity: true, quickActions: true, operationalCostChart: true, dashboardStatus: "All", compactRows: false, reducedMotion: false, sidebarLabels: true };
