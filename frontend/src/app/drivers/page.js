@@ -219,7 +219,6 @@ export default function DriversPage() {
         <>
           <div className="flex flex-col gap-2 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
             <div>Showing {Math.min((safePage - 1) * PAGE_SIZE + 1, filteredDrivers.length)}–{Math.min(safePage * PAGE_SIZE, filteredDrivers.length)} of {filteredDrivers.length} drivers</div>
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-400">Client-side view only</div>
           </div>
           <DriverTable drivers={pagedDrivers} onView={openViewModal} onEdit={openEditModal} onDelete={openDeleteModal} />
           <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />
