@@ -1,5 +1,9 @@
-venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Environment variables
 .env
-.pytest_cache/
